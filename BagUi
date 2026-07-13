@@ -1,0 +1,68 @@
+using UnityEngine;
+using TMPro;
+using UnityEngine.UI;
+
+public class BagUI : MonoBehaviour
+{
+    [Header("背包总面板")]
+    public GameObject bagPanel;
+    [Header("道具描述文字")]
+    public TMP_Text descText;
+    [Header("道具存放父物体")]
+    public Transform itemGrid;
+    [Header("道具按钮模板")]
+    public Button itemBtnPrefab;
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.B))
+        {
+            ToggleBag();
+        }
+    }
+
+    void ToggleBag()
+    {
+        bool isOpen = !bagPanel.activeSelf;
+        bagPanel.SetActive(isOpen);
+        if (isOpen)
+        {
+            RefreshBagUI();
+        }
+        else
+        {
+            descText.text = "";
+        }
+    }
+
+    //刷新背包道具列表
+    public void RefreshBagUI()
+    {
+        descText.text = "";
+        //清除上一次生成的所有按钮
+        foreach (Transform child in itemGrid)
+        {
+            Destroy(child.gameObject);
+        }
+
+        //遍历背包内收集到的小球道具，动态创建按钮
+        foreach (ItemData item in InventoryManager.Instance.bagItems)
+        {
+            Button newItemBtn = Instantiate(itemBtnPrefab, itemGrid);
+            TMP_Text btnText = newItemBtn.GetComponentInChildren<TMP_Text>();
+            btnText.text = item.itemName;
+
+            //点击按钮展示道具说明
+            newItemBtn.onClick.AddListener(() =>
+            {
+                descText.text = $"【{item.itemName}】\n{item.desc}";
+            });
+        }
+    }
+
+    public void CloseBag()
+    {
+        bagPanel.SetActive(false);
+        descText.text = "";
+    }
+}
