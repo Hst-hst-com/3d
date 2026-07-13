@@ -1,0 +1,66 @@
+using UnityEngine;
+using TMPro;
+
+public class CollectPoint : MonoBehaviour
+{
+    [Header("打卡奖励道具")]
+    public ItemData rewardItem;
+    [Header("拾取弹出提示文字（Canvas内创建）")]
+    public TMP_Text collectTip;
+    [Header("提示显示时长")]
+    public float tipTime = 2.2f;
+
+    [Header("打卡唯一ID（Point1填point1，Point2填point2，不要重复）")]
+    public string pointID;
+
+    private bool alreadyCollect = false;
+
+    void Start()
+    {
+        // 游戏启动读取存档，如果该点位已经打卡，直接永久隐藏
+        if (DataManager.Instance.saveData.finishedCheckPointIds.Contains(pointID))
+        {
+            alreadyCollect = true;
+            GetComponent<Collider>().enabled = false;
+            GetComponent<MeshRenderer>().enabled = false;
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if(alreadyCollect) return;
+        if(other.CompareTag("Player"))
+        {
+            bool success = InventoryManager.Instance.TryAddItem(rewardItem);
+            if(success)
+            {
+                alreadyCollect = true;
+                ShowTip($"打卡完成！获得【{rewardItem.itemName}】");
+                GetComponent<Collider>().enabled = false;
+                GetComponent<MeshRenderer>().enabled = false;
+
+                // =====存档：保存当前打卡点位=====
+                if (!DataManager.Instance.saveData.finishedCheckPointIds.Contains(pointID))
+                {
+                    DataManager.Instance.saveData.finishedCheckPointIds.Add(pointID);
+                    DataManager.Instance.SaveSaveData();
+                }
+
+                // =====新增加分调用=====
+                GameManager.Instance.AddScore();
+            }
+        }
+    }
+
+    void ShowTip(string msg)
+    {
+        collectTip.text = msg;
+        collectTip.gameObject.SetActive(true);
+        Invoke(nameof(HideTip), tipTime);
+    }
+
+    void HideTip()
+    {
+        collectTip.gameObject.SetActive(false);
+    }
+}
