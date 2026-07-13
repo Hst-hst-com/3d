@@ -1,0 +1,111 @@
+using UnityEngine;
+
+public class CameraSwitch : MonoBehaviour
+{
+    [Header("玩家根物体")]
+    public Transform player;
+    [Header("角色头部空物体（眼睛高度）")]
+    public Transform headPoint;
+    [Header("第三人称镜头参数")]
+    public float distance = 7.5f;
+    public float chestHeight = 1.7f;
+    [Header("镜头平滑过渡速度")]
+    public float smoothSpeed = 10f;
+    [Header("鼠标转动灵敏度")]
+    public float mouseSensitivity = 2f;
+    [Header("角色身体渲染组件（第一人称隐藏）")]
+    public Renderer bodyRender;
+    [Header("鼠标输入死区，消除漂移")]
+    public float inputDeadZone = 0.08f;
+
+    private bool isThirdPerson = true;
+    private float yRot;
+    private float xRot;
+    private bool isFirstFrame = true; // 新增：标记是否第一帧
+
+    void Start()
+    {
+        xRot = player.eulerAngles.y;
+        yRot = 30f;
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.V))
+        {
+            SwitchView();
+        }
+    }
+
+    void LateUpdate()
+    {
+        float mouseX = Input.GetAxis("Mouse X");
+        xRot += mouseX * mouseSensitivity;
+
+        float mouseY = Input.GetAxis("Mouse Y");
+        if (Mathf.Abs(mouseY) < inputDeadZone)
+            mouseY = 0;
+        yRot -= mouseY * mouseSensitivity;
+
+        yRot = Mathf.Clamp(yRot, -15f, 60f);
+
+        if (isThirdPerson)
+        {
+            RunThirdPerson();
+            bodyRender.enabled = true;
+        }
+        else
+        {
+            RunFirstPerson();
+            bodyRender.enabled = false;
+        }
+    }
+
+    void RunThirdPerson()
+    {
+        Vector3 orbitCenter = player.position + new Vector3(0, chestHeight, 0);
+        Quaternion orbitRot = Quaternion.Euler(yRot, xRot, 0);
+        Vector3 cameraOffset = orbitRot * Vector3.back * distance;
+        Vector3 targetPos = orbitCenter + cameraOffset;
+
+        if (isFirstFrame)
+        {
+            // 第一帧：直接赋值，不使用插值！杜绝开局缓慢飘移视觉bug
+            transform.position = targetPos;
+            isFirstFrame = false;
+        }
+        else
+        {
+            // 正常运行之后再开启平滑
+            transform.position = Vector3.Lerp(transform.position, targetPos, smoothSpeed * Time.deltaTime);
+        }
+
+        transform.LookAt(orbitCenter);
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    void RunFirstPerson()
+    {
+        if (isFirstFrame)
+        {
+            transform.position = headPoint.position;
+            isFirstFrame = false;
+        }
+        else
+        {
+            transform.position = Vector3.Lerp(transform.position, headPoint.position, smoothSpeed * Time.deltaTime);
+        }
+        
+        Quaternion targetViewRot = Quaternion.Euler(yRot, xRot, 0);
+        transform.rotation = Quaternion.Lerp(transform.rotation, targetViewRot, smoothSpeed * Time.deltaTime);
+        headPoint.rotation = transform.rotation;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    public void SwitchView()
+    {
+        isThirdPerson = !isThirdPerson;
+    }
+}
