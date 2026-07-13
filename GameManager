@@ -1,0 +1,92 @@
+using UnityEngine;
+using TMPro;
+
+public class GameManager : MonoBehaviour
+{
+    public static GameManager Instance;
+
+    [Header("游戏设置")]
+    public int totalCollectCount = 5;
+    public int scorePerItem = 20;
+    public GameObject winPanel;
+    public GameObject losePanel;      //新增失败面板
+
+    [Header("UI文字")]
+    public TMP_Text scoreText;
+    public TMP_Text hpText;           //生命值文字
+
+    [Header("血条Slider")]
+    public UnityEngine.UI.Slider hpSlider;
+    public int maxHP = 100;
+
+    private int currentScore = 0;
+    private int currentHP;
+    public bool isGameOver = false;
+
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+        currentHP = maxHP;
+        RefreshHPUI();
+    }
+
+    void Start()
+    {
+        //游戏启动从存档读取得分
+        currentScore = DataManager.Instance.saveData.gameScore;
+        scoreText.text = $"得分：{currentScore}";
+    }
+
+    //拾取加分
+    public void AddScore()
+    {
+        if (isGameOver) return;
+        currentScore += scorePerItem;
+        scoreText.text = $"得分：{currentScore}";
+
+        //同步分数到本地存档并保存
+        DataManager.Instance.saveData.gameScore = currentScore;
+        DataManager.Instance.SaveSaveData();
+
+        if(currentScore >= totalCollectCount * scorePerItem)
+        {
+            WinGame();
+        }
+    }
+
+    //玩家受到伤害扣血
+    public void DamageHP(int value)
+    {
+        if (isGameOver) return;
+        currentHP -= value;
+        if (currentHP < 0) currentHP = 0;
+
+        RefreshHPUI();
+
+        //生命值低于60 → 游戏失败
+        if(currentHP < 60)
+        {
+            LoseGame();
+        }
+    }
+
+    void RefreshHPUI()
+    {
+        hpText.text = $"生命值：{currentHP}";
+        hpSlider.value = currentHP;
+    }
+
+    void WinGame()
+    {
+        isGameOver = true;
+        winPanel.SetActive(true);
+        Time.timeScale = 0;
+    }
+
+    void LoseGame()
+    {
+        isGameOver = true;
+        losePanel.SetActive(true);
+        Time.timeScale = 0;
+    }
+}
