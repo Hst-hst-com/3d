@@ -1,0 +1,38 @@
+using UnityEngine;
+
+public class DamageZone : MonoBehaviour
+{
+    [Header("每秒扣血量")]
+    public int damagePerSecond = 3;
+    private bool playerInZone = false;
+    private float timer;
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if(other.CompareTag("Player"))
+        {
+            playerInZone = true;
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if(other.CompareTag("Player"))
+        {
+            playerInZone = false;
+            timer = 0;
+        }
+    }
+
+    void Update()
+    {
+        if(!playerInZone || GameManager.Instance.isGameOver) return;
+
+        timer += Time.deltaTime;
+        if(timer >= 1f)
+        {
+            GameManager.Instance.DamageHP(damagePerSecond);
+            timer = 0;
+        }
+    }
+}
