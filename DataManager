@@ -1,0 +1,57 @@
+using UnityEngine;
+using System.IO;
+
+public class DataManager : MonoBehaviour
+{
+    public static DataManager Instance { get; private set; }
+    public GameData saveData;
+    private string saveFilePath;
+
+    private void Awake()
+    {
+        //防止重复生成管理器
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+
+        //设置存档存放路径
+        saveFilePath = Application.persistentDataPath + "/gamesave.json";
+        //游戏启动【自动读取存档】
+        LoadSaveData();
+    }
+
+    /// <summary>保存数据到本地</summary>
+    public void SaveSaveData()
+    {
+        string jsonText = JsonUtility.ToJson(saveData);
+        File.WriteAllText(saveFilePath, jsonText);
+        Debug.Log("✅存档保存成功");
+    }
+
+    /// <summary>读取本地存档，没有存档就新建</summary>
+    public void LoadSaveData()
+    {
+        if (File.Exists(saveFilePath))
+        {
+            string jsonText = File.ReadAllText(saveFilePath);
+            saveData = JsonUtility.FromJson<GameData>(jsonText);
+            Debug.Log("✅读取历史存档成功");
+        }
+        else
+        {
+            saveData = new GameData();
+            Debug.Log("⚠️无存档，创建新存档");
+        }
+    }
+
+    //测试用：清空全部进度
+    public void ClearAllData()
+    {
+        saveData = new GameData();
+        SaveSaveData();
+    }
+}
