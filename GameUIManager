@@ -1,0 +1,98 @@
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+
+public class GameUIManager : MonoBehaviour
+{
+    [Header("面板拖拽赋值")]
+    public GameObject MainMenuPanel;
+    public GameObject SettingPanel;
+    public GameObject WinPanel;
+    public GameObject LosePanel;
+    public GameObject HUD_Panel;
+
+    [Header("音频")]
+    public AudioSource BGM_Music;
+    public Slider Slider_MasterVolume;
+    public Slider Slider_SFXVolume;
+    public Slider Slider_DaySpeed;
+    public Toggle Toggle_BGM;
+
+    void Start()
+    {
+        MainMenuPanel.SetActive(true);
+        HUD_Panel.SetActive(false);
+        SettingPanel.SetActive(false);
+        WinPanel.SetActive(false);
+        LosePanel.SetActive(false);
+    }
+
+    public void Click_StartGame()
+    {
+        MainMenuPanel.SetActive(false);
+        HUD_Panel.SetActive(true);
+        Cursor.lockState = CursorLockMode.Locked;
+    }
+
+    public void Click_QuitGame()
+    {
+        Application.Quit();
+        #if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+        #endif
+    }
+
+    public void Open_Setting()
+    {
+        SettingPanel.SetActive(true);
+    }
+    public void Close_Setting()
+    {
+        SettingPanel.SetActive(false);
+    }
+
+    public void Change_MasterVolume(float value)
+    {
+        AudioListener.volume = value;
+    }
+    public void Change_SFXVolume(float value)
+    {
+        PlayerPrefs.SetFloat("SFX", value);
+    }
+    public void Change_DaySpeed(float value)
+    {
+        
+    }
+    public void Switch_BGM(bool open)
+    {
+        if(open) BGM_Music.Play();
+        else BGM_Music.Pause();
+    }
+
+    public void Show_Win()
+    {
+        WinPanel.SetActive(true);
+        Cursor.lockState = CursorLockMode.None;
+    }
+    public void Show_Lose()
+    {
+        LosePanel.SetActive(true);
+        Cursor.lockState = CursorLockMode.None;
+    }
+    public void Back_Menu()
+    {
+        MainMenuPanel.SetActive(true);
+        HUD_Panel.SetActive(false);
+        WinPanel.SetActive(false);
+        LosePanel.SetActive(false);
+        Cursor.lockState = CursorLockMode.None;
+    }
+    public void Restart_Game()
+    {
+        MainMenuPanel.SetActive(false);
+        HUD_Panel.SetActive(true);
+        WinPanel.SetActive(false);
+        LosePanel.SetActive(false);
+        Cursor.lockState = CursorLockMode.Locked;
+    }
+}
