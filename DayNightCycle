@@ -1,0 +1,20 @@
+using UnityEngine;
+
+public class DayNightCycle : MonoBehaviour
+{
+    [Header("昼夜流逝速度（滑块控制这个值）")]
+    public float daySpeed = 0.05f;
+    [Header("太阳光方向光源")]
+    public Light sunLight;
+
+    private float timeProgress;
+
+    void Update()
+    {
+        if (sunLight == null) return;
+
+        timeProgress += daySpeed * Time.deltaTime;
+        // 旋转太阳光实现昼夜轮回
+        sunLight.transform.localEulerAngles = new Vector3(timeProgress * 180f, 30f, 0f);
+    }
+}
